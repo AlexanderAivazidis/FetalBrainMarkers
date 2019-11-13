@@ -56,18 +56,5 @@ for (i in 1:length(markerGenes)){
 
 ```
 
-Let's also look how genes associated with regional brain size volume are expressed across our cell types:
-
-```{r, include = TRUE, message = FALSE, warning = FALSE, cache = FALSE}
-
-gwasSummary = read_xlsx('Supp_Table12.xlsx')
-gwasGenes = unique(unname(unlist(gwasSummary[,3])))
-gwasGenes = gwasGenes[2:length(gwasGenes)]
-raw_counts_subset = as.matrix(raw_counts_mat[rownames(raw_counts_mat) %in% gwasGenes,])
-meanExpr = do.call("cbind", tapply(metadata$Cell, metadata$Cluster, function(x) rowMeans(raw_counts_subset[,x])))
-pdf('BrainSizeGwas.pdf', width = 25, height = 10)
-Heatmap(t(meanExpr))
-dev.off()
-```
 
 
