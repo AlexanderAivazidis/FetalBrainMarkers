@@ -68,7 +68,6 @@ meanExpr = do.call("cbind", tapply(metadata$Cell, metadata$Cluster, function(x) 
 pdf('BrainSizeGwas.pdf', width = 25, height = 10)
 Heatmap(t(meanExpr))
 dev.off()
-print(Heatmap(t(meanExpr)))
 ```
 
 
