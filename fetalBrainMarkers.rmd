@@ -1,0 +1,74 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+### Expression of cell type markers and genes associated with regional brain volume in fetal neocortex
+
+---
+  title: "Expression of cell type markers and genes associated with regional brain volume in fetal neocortex"
+output:
+  html_document: default
+github_document: default
+---
+  
+```{r include = FALSE}
+### Load data and packages
+
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+
+```
+
+
+```{r, include = FALSE, message = FALSE, warning = FALSE, cache = FALSE}
+library(Seurat)
+require(gplots)
+require(ComplexHeatmap)
+require(ggplot2)
+require(readxl)
+library("dplyr")
+require(ComplexHeatmap)
+```
+
+We will use the Polioudakis 2019 data to check UMI counts in each cell type for our 4 chosen marker genes HOPX (oRG), EOMES (IP), STMN2 (Neurons), PDGFRA (OPCs):
+
+```{r, include = TRUE, message = FALSE, warning = FALSE, cache = FALSE}
+
+markerGenes = c('HOPX', 'EOMES', 'STMN2', 'PDGFRA')
+setwd('/home/jovyan/FetalBrainMarkers/')
+load('../data/fetalBrain/Polioudakis/raw_counts_mat.rdata')
+metadata = read.delim('../data/fetalBrain/Polioudakis/cell_metadata.csv', sep = ',')
+raw_counts_mat = raw_counts_mat[,metadata$Cell]
+
+```
+
+```{r, include = TRUE, message = FALSE, warning = FALSE, cache = FALSE}
+
+df = data.frame(cluster = metadata$Cluster, subcluster = metadata$Subcluster, HOPX = raw_counts_mat['HOPX', ], EOMES = raw_counts_mat['EOMES', ], STMN2 = raw_counts_mat['STMN2', ], PDGFRA = raw_counts_mat['PDGFRA', ])
+for (i in 1:length(markerGenes)){
+  print(ggplot(df, aes(x=cluster, y=get(markerGenes[i]))) + geom_jitter(size = 0.01) + 
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red") + 
+  ylab(paste(markerGenes[i], 'UMI Count', sep = ' ')) +
+  xlab(NULL) + 
+  ggtitle(paste(markerGenes[i], 'Expression across Celltypes', sep = ' ')) + 
+  theme(axis.text=element_text(size=12)))
+}
+
+```
+
+Let's also look how genes associated with regional brain size volume are expressed across our cell types:
+
+```{r, include = TRUE, message = FALSE, warning = FALSE, cache = FALSE}
+
+gwasSummary = read_xlsx('Supp_Table12.xlsx')
+gwasGenes = unique(unname(unlist(gwasSummary[,3])))
+gwasGenes = gwasGenes[2:length(gwasGenes)]
+raw_counts_subset = as.matrix(raw_counts_mat[rownames(raw_counts_mat) %in% gwasGenes,])
+meanExpr = do.call("cbind", tapply(metadata$Cell, metadata$Cluster, function(x) rowMeans(raw_counts_subset[,x])))
+pdf('BrainSizeGwas.pdf', width = 25, height = 10)
+Heatmap(t(meanExpr))
+dev.off()
+print(Heatmap(t(meanExpr)))
+```
+
+
