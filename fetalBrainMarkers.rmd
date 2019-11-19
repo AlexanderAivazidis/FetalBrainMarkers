@@ -3,7 +3,7 @@ output:
   html_document: default
   pdf_document: default
 ---
-### Expression of cell type markers and genes associated with regional brain volume in fetal neocortex
+### Expression of cell type markers in fetal neocortex Polioudakis 2019 dataset
 
 ---
   title: "Expression of cell type markers and genes associated with regional brain volume in fetal neocortex"

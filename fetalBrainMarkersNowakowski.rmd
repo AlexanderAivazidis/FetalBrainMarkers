@@ -1,0 +1,64 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+### Expression of cell type markers in fetal neocortex Nowakowski 2017 dataset
+
+---
+  title: "Expression of cell type markers and genes associated with regional brain volume in fetal neocortex"
+output:
+  html_document: default
+github_document: default
+fig_width: 12
+fig_height: 4 
+---
+  
+```{r include = FALSE}
+### Load data and packages
+knitr::opts_chunk$set(fig.width=24, fig.height=8) 
+
+```
+
+
+```{r, include = FALSE, message = FALSE, warning = FALSE, cache = FALSE}
+library(Seurat)
+require(gplots)
+require(ComplexHeatmap)
+require(ggplot2)
+require(readxl)
+library("dplyr")
+require(ComplexHeatmap)
+```
+
+We will use the Nowakowski 2017 data to check read counts in each cell type for our 4 chosen marker genes HOPX (oRG), EOMES (IP), STMN2 (Neurons), PDGFRA (OPCs):
+
+```{r, include = TRUE, message = FALSE, warning = FALSE, cache = FALSE}
+
+markerGenes = c('HOPX', 'EOMES', 'STMN2', 'PDGFRA')
+setwd('/home/jovyan/FetalBrainMarkers/')
+exprMatrix = read.table('../data/fetalBrain/Nowakowski/exprMatrix.tsv.gz', stringsAsFactors = FALSE)
+rownames(exprMatrix) = exprMatrix[,1]
+colnames(exprMatrix) = exprMatrix[1,]
+exprMatrix = exprMatrix[2:dim(exprMatrix)[1],2:dim(exprMatrix)[2]]
+metadata = read.delim('../data/fetalBrain/Nowakowski/meta.tsv')
+exprMatrix = exprMatrix[,match(metadata$Cell, colnames(exprMatrix))]
+
+```
+
+```{r, include = TRUE, message = FALSE, warning = FALSE, cache = FALSE, fig.height = 8, fig.width = 16}
+
+df = data.frame(cluster = unlist(lapply(metadata$WGCNAcluster, function(x) strsplit(as.character(x), '-')[[1]][1])), HOPX = as.numeric(unlist(unname(exprMatrix['HOPX', ]))), EOMES = as.numeric(unlist(unname(exprMatrix['EOMES', ]))), STMN2 = as.numeric(unlist(unname(exprMatrix['STMN2', ]))), PDGFRA = as.numeric(unlist(unname(exprMatrix['PDGFRA', ]))))
+for (i in 1:length(markerGenes)){
+  print(ggplot(df, aes(x=cluster, y=get(markerGenes[i]))) + geom_jitter(size = 0.01) + 
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red") + 
+  ylab(paste(markerGenes[i], 'Read Count', sep = ' ')) +
+  xlab(NULL) + 
+  ggtitle(paste(markerGenes[i], 'Expression across Celltypes', sep = ' ')) + 
+  theme(axis.text=element_text(size=12)))
+}
+
+```
+
+
+
