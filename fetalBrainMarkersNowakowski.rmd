@@ -31,24 +31,22 @@ library("dplyr")
 require(ComplexHeatmap)
 ```
 
-We will use the Nowakowski 2017 data to check read counts in each cell type for our 4 chosen marker genes HOPX (oRG), EOMES (IP), STMN2 (Neurons), PDGFRA (OPCs):
+We will use the Nowakowski 2017 data to check read counts in each cell type for many marker genes including HOPX (oRG), EOMES (IP), STMN2 (Neurons), PDGFRA (OPCs):
 
 ```{r, include = TRUE, message = FALSE, warning = FALSE, cache = FALSE}
 
-markerGenes = c('HOPX', 'EOMES', 'STMN2', 'PDGFRA')
+markerGenes = c('HOPX', 'EOMES', 'STMN2', 'PDGFRA', 'TBR1', 'PAX6', 'TNC', 'SOX2', 'FAM107A', 'BCL11B', 'SATB2')
 setwd('/home/jovyan/FetalBrainMarkers/')
-exprMatrix = read.table('../data/fetalBrain/Nowakowski/exprMatrix.tsv.gz', stringsAsFactors = FALSE)
-rownames(exprMatrix) = exprMatrix[,1]
-colnames(exprMatrix) = exprMatrix[1,]
-exprMatrix = exprMatrix[2:dim(exprMatrix)[1],2:dim(exprMatrix)[2]]
+raw_counts_mat = read.delim('../data/fetalBrain/Nowakowski/exprMatrix.tsv.gz', row.names = 1, sep = '\t')
 metadata = read.delim('../data/fetalBrain/Nowakowski/meta.tsv')
-exprMatrix = exprMatrix[,match(metadata$Cell, colnames(exprMatrix))]
+raw_counts_mat = as.matrix(raw_counts_mat[,match(metadata$Cell, colnames(raw_counts_mat))])
 
 ```
 
 ```{r, include = TRUE, message = FALSE, warning = FALSE, cache = FALSE, fig.height = 8, fig.width = 16}
 
-df = data.frame(cluster = unlist(lapply(metadata$WGCNAcluster, function(x) strsplit(as.character(x), '-')[[1]][1])), HOPX = as.numeric(unlist(unname(exprMatrix['HOPX', ]))), EOMES = as.numeric(unlist(unname(exprMatrix['EOMES', ]))), STMN2 = as.numeric(unlist(unname(exprMatrix['STMN2', ]))), PDGFRA = as.numeric(unlist(unname(exprMatrix['PDGFRA', ]))))
+df = data.frame(cluster = unlist(lapply(metadata$WGCNAcluster, function(x) strsplit(as.character(x), '-')[[1]][1])), HOPX = raw_counts_mat['HOPX', ], EOMES = raw_counts_mat['EOMES', ], STMN2 = raw_counts_mat['STMN2', ], PDGFRA = raw_counts_mat['PDGFRA',], TBR1 = raw_counts_mat['TBR1', ], PAX6 = raw_counts_mat['PAX6', ], TNC = raw_counts_mat['TNC', ], SOX2 = raw_counts_mat['SOX2', ], FAM107A = raw_counts_mat['FAM107A',], BCL11B = raw_counts_mat['BCL11B', ], SATB2 = raw_counts_mat['SATB2', ])
+
 for (i in 1:length(markerGenes)){
   print(ggplot(df, aes(x=cluster, y=get(markerGenes[i]))) + geom_jitter(size = 0.01) + 
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red") + 
